@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Interactive OS Model</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; }
+    h2 { color: #333; }
+    .container { display: flex; gap: 40px; flex-wrap: wrap; }
+    .module { flex: 1 1 400px; background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 0 10px #ccc; }
+    input, select, button { margin: 5px; padding: 5px; }
+    #gantt, #fileTree { margin-top: 20px; background: #eee; padding: 10px; border-radius: 5px; }
+    ul { list-style: none; padding-left: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Interactive OS Model</h1>
+  <div class="container">
+    <div class="module">
+      <h2>Process Scheduler</h2>
+      <label>Process ID:</label><input type="text" id="pid">
+      <label>Burst Time:</label><input type="number" id="burst">
+      <label>Priority:</label><input type="number" id="priority">
+      <button onclick="addProcess()">Add Process</button>
+      <br><label>Time Quantum:</label><input type="number" id="quantum" value="3">
+      <button onclick="runRR()">Run Round Robin</button>
+      <button onclick="runPriority()">Run Priority</button>
+      <div id="processTable"></div>
+      <div id="gantt"></div>
+    </div>
+
+    <div class="module">
+      <h2>Virtual File System</h2>
+      <label>Folder/File Name:</label><input type="text" id="fname">
+      <select id="type">
+        <option value="folder">Folder</option>
+        <option value="file">File</option>
+      </select>
+      <button onclick="addNode()">Add</button>
+      <div id="fileTree"></div>
+    </div>
+  </div>
+
+  <script>
+    let processes = [];
+    function addProcess() {
+  const pid = document.getElementById("pid").value.trim();
+  const burst = parseInt(document.getElementById("burst").value);
+  const priority = parseInt(document.getElementById("priority").value);
+  if (!pid || isNaN(burst) || isNaN(priority)) return;
+  processes.push({ pid, burst, priority });
+  document.getElementById("pid").value = "";
+  document.getElementById("burst").value = "";
+  document.getElementById("priority").value = "";
+  renderProcessTable();
+}
+
+function renderProcessTable() {
+  let html = "<b>Process List:</b><br><table border='1' cellpadding='5'><tr><th>PID</th><th>Burst Time</th><th>Priority</th></tr>";
+  for (let p of processes) {
+    html += `<tr><td>${p.pid}</td><td>${p.burst}</td><td>${p.priority}</td></tr>`;
+  }
+  html += "</table>";
+  document.getElementById("processTable").innerHTML = html;
+}
+      const pid = document.getElementById("pid").value.trim();
+      const burst = parseInt(document.getElementById("burst").value);
+      const priority = parseInt(document.getElementById("priority").value);
+      if (!pid || isNaN(burst) || isNaN(priority)) return;
+      processes.push({ pid, burst, priority });
+      document.getElementById("pid").value = "";
+      document.getElementById("burst").value = "";
+      document.getElementById("priority").value = "";
+    }
+
+    function runRR() {
+      const quantum = parseInt(document.getElementById("quantum").value);
+      if (isNaN(quantum) || quantum <= 0 || processes.length === 0) return;
+      let queue = processes.map(p => ({ ...p, rem: p.burst }));
+      let time = 0, log = "<b>Round Robin Gantt Chart:</b><br>";
+      while (queue.length) {
+        const p = queue.shift();
+        const exec = Math.min(p.rem, quantum);
+        log += `P${p.pid} [${time}-${time + exec}]<br>`;
+        time += exec;
+        p.rem -= exec;
+        if (p.rem > 0) queue.push(p);
+      }
+      document.getElementById("gantt").innerHTML = log;
+    }
+
+    function runPriority() {
+      if (processes.length === 0) return;
+      const sorted = [...processes].sort((a, b) => a.priority - b.priority);
+      let time = 0, log = "<b>Priority Scheduling Gantt Chart:</b><br>";
+      for (let p of sorted) {
+        log += `P${p.pid} [${time}-${time + p.burst}]<br>`;
+        time += p.burst;
+      }
+      document.getElementById("gantt").innerHTML = log;
+    }
+
+    const fs = { name: "root", type: "folder", children: [] };
+    function addNode() {
+      const name = document.getElementById("fname").value.trim();
+      const type = document.getElementById("type").value;
+      if (!name) return;
+      fs.children.push({ name, type, children: [] });
+      document.getElementById("fname").value = "";
+      renderTree();
+    }
+
+    function renderTree() {
+      const buildList = (node) => {
+        let html = `<li>${node.name} (${node.type})`;
+        if (node.type === "folder" && node.children.length) {
+          html += `<ul>${node.children.map(buildList).join('')}</ul>`;
+        }
+        html += `</li>`;
+        return html;
+      };
+      document.getElementById("fileTree").innerHTML = `<ul>${fs.children.map(buildList).join('')}</ul>`;
+    }
+  </script>
+</body>
+</html>

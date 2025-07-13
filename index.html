@@ -2,125 +2,725 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Interactive OS Model</title>
+  <title>Enhanced Interactive OS Model</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; }
-    h2 { color: #333; }
-    .container { display: flex; gap: 40px; flex-wrap: wrap; }
-    .module { flex: 1 1 400px; background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 0 10px #ccc; }
-    input, select, button { margin: 5px; padding: 5px; }
-    #gantt, #fileTree { margin-top: 20px; background: #eee; padding: 10px; border-radius: 5px; }
-    ul { list-style: none; padding-left: 20px; }
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      padding: 20px; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      margin: 0;
+    }
+    h1 { 
+      color: white; 
+      text-align: center; 
+      margin-bottom: 30px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+    h2 { 
+      color: #333; 
+      border-bottom: 2px solid #667eea;
+      padding-bottom: 10px;
+    }
+    .container { 
+      display: grid; 
+      grid-template-columns: 1fr 1fr; 
+      gap: 30px; 
+      margin-bottom: 30px;
+    }
+    .full-width {
+      grid-column: 1 / -1;
+    }
+    .module { 
+      background: white; 
+      border-radius: 15px; 
+      padding: 25px; 
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      transition: transform 0.3s ease;
+    }
+    .module:hover {
+      transform: translateY(-5px);
+    }
+    input, select, button { 
+      margin: 8px 5px; 
+      padding: 10px; 
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    button { 
+      background: linear-gradient(45deg, #667eea, #764ba2); 
+      color: white; 
+      border: none; 
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    button:hover { 
+      transform: scale(1.05);
+    }
+    #gantt, #fileTree { 
+      margin-top: 20px; 
+      background: #f8f9fa; 
+      padding: 15px; 
+      border-radius: 10px;
+      border: 1px solid #e9ecef;
+    }
+    ul { 
+      list-style: none; 
+      padding-left: 20px; 
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background-color: #f8f9fa;
+      font-weight: bold;
+    }
+    .gantt-bar {
+      display: inline-block;
+      height: 30px;
+      margin: 2px;
+      padding: 5px 10px;
+      border-radius: 5px;
+      color: white;
+      font-weight: bold;
+      vertical-align: middle;
+    }
+    .chart-container {
+      position: relative;
+      height: 300px;
+      margin-top: 20px;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+    .stat-card {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+      border: 1px solid #e9ecef;
+    }
+    .stat-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #667eea;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+    }
+    .file-node {
+      padding: 5px;
+      margin: 2px 0;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    .file-node:hover {
+      background-color: #e9ecef;
+    }
+    .folder-icon::before {
+      content: "📁 ";
+    }
+    .file-icon::before {
+      content: "📄 ";
+    }
+    .memory-visualization {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 15px;
+    }
+    .memory-block {
+      width: 40px;
+      height: 20px;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: bold;
+    }
+    .memory-free {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .memory-used {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
   </style>
 </head>
 <body>
-  <h1>Interactive OS Model</h1>
+  <h1>🖥️ Enhanced Interactive OS Model</h1>
+  
   <div class="container">
     <div class="module">
-      <h2>Process Scheduler</h2>
-      <label>Process ID:</label><input type="text" id="pid">
-      <label>Burst Time:</label><input type="number" id="burst">
-      <label>Priority:</label><input type="number" id="priority">
-      <button onclick="addProcess()">Add Process</button>
-      <br><label>Time Quantum:</label><input type="number" id="quantum" value="3">
-      <button onclick="runRR()">Run Round Robin</button>
-      <button onclick="runPriority()">Run Priority</button>
+      <h2>⚙️ Process Scheduler</h2>
+      <div>
+        <label>Process ID:</label>
+        <input type="text" id="pid" placeholder="e.g., P1">
+        <label>Burst Time:</label>
+        <input type="number" id="burst" placeholder="CPU time" min="1">
+        <label>Priority:</label>
+        <input type="number" id="priority" placeholder="Lower = higher priority" min="1">
+        <button onclick="addProcess()">➕ Add Process</button>
+        <button onclick="clearProcesses()">🗑️ Clear All</button>
+      </div>
+      
+      <div style="margin-top: 15px;">
+        <label>Time Quantum:</label>
+        <input type="number" id="quantum" value="3" min="1">
+        <button onclick="runRR()">🔄 Run Round Robin</button>
+        <button onclick="runPriority()">⭐ Run Priority</button>
+        <button onclick="runFCFS()">➡️ Run FCFS</button>
+      </div>
+      
       <div id="processTable"></div>
+      
+      <div class="stats" id="schedulingStats" style="display: none;">
+        <div class="stat-card">
+          <div class="stat-value" id="avgWaitTime">0</div>
+          <div class="stat-label">Avg Wait Time</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="avgTurnTime">0</div>
+          <div class="stat-label">Avg Turnaround</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="totalTime">0</div>
+          <div class="stat-label">Total Time</div>
+        </div>
+      </div>
+      
       <div id="gantt"></div>
     </div>
 
     <div class="module">
-      <h2>Virtual File System</h2>
-      <label>Folder/File Name:</label><input type="text" id="fname">
-      <select id="type">
-        <option value="folder">Folder</option>
-        <option value="file">File</option>
-      </select>
-      <button onclick="addNode()">Add</button>
+      <h2>📁 Virtual File System</h2>
+      <div>
+        <label>Name:</label>
+        <input type="text" id="fname" placeholder="folder/file name">
+        <select id="type">
+          <option value="folder">📁 Folder</option>
+          <option value="file">📄 File</option>
+        </select>
+        <button onclick="addNode()">➕ Add</button>
+        <button onclick="clearFS()">🗑️ Clear</button>
+      </div>
       <div id="fileTree"></div>
+      
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-value" id="folderCount">0</div>
+          <div class="stat-label">Folders</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="fileCount">0</div>
+          <div class="stat-label">Files</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="module">
+      <h2>💾 Memory Management</h2>
+      <div>
+        <label>Process ID:</label>
+        <input type="text" id="memPid" placeholder="P1">
+        <label>Memory Size:</label>
+        <input type="number" id="memSize" placeholder="KB" min="1" max="50">
+        <button onclick="allocateMemory()">📥 Allocate</button>
+        <button onclick="deallocateMemory()">📤 Deallocate</button>
+        <button onclick="clearMemory()">🗑️ Clear Memory</button>
+      </div>
+      
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-value" id="usedMemory">0</div>
+          <div class="stat-label">Used (KB)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="freeMemory">1000</div>
+          <div class="stat-label">Free (KB)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="fragmentation">0</div>
+          <div class="stat-label">Fragmentation</div>
+        </div>
+      </div>
+      
+      <div id="memoryVisualization">
+        <h4>Memory Layout (1000 KB total)</h4>
+        <div class="memory-visualization" id="memoryBlocks"></div>
+      </div>
+    </div>
+
+    <div class="module full-width">
+      <h2>📊 Performance Analytics</h2>
+      <div class="chart-container">
+        <canvas id="performanceChart"></canvas>
+      </div>
     </div>
   </div>
 
   <script>
     let processes = [];
-    function addProcess() {
-  const pid = document.getElementById("pid").value.trim();
-  const burst = parseInt(document.getElementById("burst").value);
-  const priority = parseInt(document.getElementById("priority").value);
-  if (!pid || isNaN(burst) || isNaN(priority)) return;
-  processes.push({ pid, burst, priority });
-  document.getElementById("pid").value = "";
-  document.getElementById("burst").value = "";
-  document.getElementById("priority").value = "";
-  renderProcessTable();
-}
+    let schedulingResults = [];
+    let memoryMap = new Array(100).fill(null); // 100 blocks of 10KB each
+    let allocatedProcesses = new Map();
 
-function renderProcessTable() {
-  let html = "<b>Process List:</b><br><table border='1' cellpadding='5'><tr><th>PID</th><th>Burst Time</th><th>Priority</th></tr>";
-  for (let p of processes) {
-    html += `<tr><td>${p.pid}</td><td>${p.burst}</td><td>${p.priority}</td></tr>`;
-  }
-  html += "</table>";
-  document.getElementById("processTable").innerHTML = html;
-}
+    // Process Scheduler Functions
+    function addProcess() {
       const pid = document.getElementById("pid").value.trim();
       const burst = parseInt(document.getElementById("burst").value);
       const priority = parseInt(document.getElementById("priority").value);
-      if (!pid || isNaN(burst) || isNaN(priority)) return;
-      processes.push({ pid, burst, priority });
+      
+      if (!pid || isNaN(burst) || isNaN(priority)) {
+        alert("Please fill all fields with valid values");
+        return;
+      }
+      
+      if (processes.find(p => p.pid === pid)) {
+        alert("Process ID already exists");
+        return;
+      }
+      
+      processes.push({ pid, burst, priority, arrivalTime: processes.length });
       document.getElementById("pid").value = "";
       document.getElementById("burst").value = "";
       document.getElementById("priority").value = "";
+      renderProcessTable();
+    }
+
+    function clearProcesses() {
+      processes = [];
+      schedulingResults = [];
+      renderProcessTable();
+      document.getElementById("gantt").innerHTML = "";
+      document.getElementById("schedulingStats").style.display = "none";
+    }
+
+    function renderProcessTable() {
+      if (processes.length === 0) {
+        document.getElementById("processTable").innerHTML = "<p>No processes added yet.</p>";
+        return;
+      }
+      
+      let html = "<h4>Process Queue:</h4><table><tr><th>PID</th><th>Burst Time</th><th>Priority</th><th>Arrival</th></tr>";
+      for (let p of processes) {
+        html += `<tr><td>${p.pid}</td><td>${p.burst}</td><td>${p.priority}</td><td>${p.arrivalTime}</td></tr>`;
+      }
+      html += "</table>";
+      document.getElementById("processTable").innerHTML = html;
     }
 
     function runRR() {
       const quantum = parseInt(document.getElementById("quantum").value);
       if (isNaN(quantum) || quantum <= 0 || processes.length === 0) return;
-      let queue = processes.map(p => ({ ...p, rem: p.burst }));
-      let time = 0, log = "<b>Round Robin Gantt Chart:</b><br>";
-      while (queue.length) {
+      
+      let queue = processes.map(p => ({ ...p, rem: p.burst, waitTime: 0, turnAroundTime: 0 }));
+      let time = 0;
+      let ganttData = [];
+      let completedProcesses = [];
+      
+      while (queue.length > 0) {
         const p = queue.shift();
         const exec = Math.min(p.rem, quantum);
-        log += `P${p.pid} [${time}-${time + exec}]<br>`;
+        
+        ganttData.push({
+          pid: p.pid,
+          start: time,
+          end: time + exec,
+          color: getProcessColor(p.pid)
+        });
+        
         time += exec;
         p.rem -= exec;
-        if (p.rem > 0) queue.push(p);
+        
+        if (p.rem === 0) {
+          p.turnAroundTime = time - p.arrivalTime;
+          p.waitTime = p.turnAroundTime - p.burst;
+          completedProcesses.push(p);
+        } else {
+          // Add waiting time for other processes
+          queue.forEach(waiting => waiting.waitTime += exec);
+          queue.push(p);
+        }
       }
-      document.getElementById("gantt").innerHTML = log;
+      
+      renderGanttChart(ganttData, "Round Robin");
+      calculateAndDisplayStats(completedProcesses);
+      updatePerformanceChart();
     }
 
     function runPriority() {
       if (processes.length === 0) return;
+      
       const sorted = [...processes].sort((a, b) => a.priority - b.priority);
-      let time = 0, log = "<b>Priority Scheduling Gantt Chart:</b><br>";
+      let time = 0;
+      let ganttData = [];
+      let completedProcesses = [];
+      
       for (let p of sorted) {
-        log += `P${p.pid} [${time}-${time + p.burst}]<br>`;
+        const waitTime = time - p.arrivalTime;
+        ganttData.push({
+          pid: p.pid,
+          start: time,
+          end: time + p.burst,
+          color: getProcessColor(p.pid)
+        });
+        
         time += p.burst;
+        completedProcesses.push({
+          ...p,
+          waitTime: Math.max(0, waitTime),
+          turnAroundTime: time - p.arrivalTime
+        });
       }
-      document.getElementById("gantt").innerHTML = log;
+      
+      renderGanttChart(ganttData, "Priority Scheduling");
+      calculateAndDisplayStats(completedProcesses);
+      updatePerformanceChart();
     }
 
+    function runFCFS() {
+      if (processes.length === 0) return;
+      
+      const sorted = [...processes].sort((a, b) => a.arrivalTime - b.arrivalTime);
+      let time = 0;
+      let ganttData = [];
+      let completedProcesses = [];
+      
+      for (let p of sorted) {
+        const waitTime = time - p.arrivalTime;
+        ganttData.push({
+          pid: p.pid,
+          start: time,
+          end: time + p.burst,
+          color: getProcessColor(p.pid)
+        });
+        
+        time += p.burst;
+        completedProcesses.push({
+          ...p,
+          waitTime: Math.max(0, waitTime),
+          turnAroundTime: time - p.arrivalTime
+        });
+      }
+      
+      renderGanttChart(ganttData, "First Come First Serve");
+      calculateAndDisplayStats(completedProcesses);
+      updatePerformanceChart();
+    }
+
+    function getProcessColor(pid) {
+      const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#f0932b', '#eb4d4b', '#6c5ce7'];
+      return colors[pid.charCodeAt(pid.length - 1) % colors.length];
+    }
+
+    function renderGanttChart(ganttData, algorithm) {
+      let html = `<h4>${algorithm} Gantt Chart:</h4>`;
+      html += '<div style="display: flex; flex-wrap: wrap; align-items: center; margin-top: 10px;">';
+      
+      for (let item of ganttData) {
+        const width = (item.end - item.start) * 40;
+        html += `<div class="gantt-bar" style="width: ${width}px; background-color: ${item.color};">
+                   ${item.pid} (${item.start}-${item.end})
+                 </div>`;
+      }
+      
+      html += '</div>';
+      document.getElementById("gantt").innerHTML = html;
+    }
+
+    function calculateAndDisplayStats(completedProcesses) {
+      const avgWaitTime = completedProcesses.reduce((sum, p) => sum + p.waitTime, 0) / completedProcesses.length;
+      const avgTurnTime = completedProcesses.reduce((sum, p) => sum + p.turnAroundTime, 0) / completedProcesses.length;
+      const totalTime = Math.max(...completedProcesses.map(p => p.turnAroundTime + p.arrivalTime));
+      
+      document.getElementById("avgWaitTime").textContent = avgWaitTime.toFixed(2);
+      document.getElementById("avgTurnTime").textContent = avgTurnTime.toFixed(2);
+      document.getElementById("totalTime").textContent = totalTime;
+      document.getElementById("schedulingStats").style.display = "grid";
+      
+      schedulingResults = completedProcesses;
+    }
+
+    // File System Functions
     const fs = { name: "root", type: "folder", children: [] };
+
     function addNode() {
       const name = document.getElementById("fname").value.trim();
       const type = document.getElementById("type").value;
-      if (!name) return;
+      
+      if (!name) {
+        alert("Please enter a name");
+        return;
+      }
+      
       fs.children.push({ name, type, children: [] });
       document.getElementById("fname").value = "";
       renderTree();
+      updateFileStats();
+    }
+
+    function clearFS() {
+      fs.children = [];
+      renderTree();
+      updateFileStats();
     }
 
     function renderTree() {
-      const buildList = (node) => {
-        let html = `<li>${node.name} (${node.type})`;
+      const buildList = (node, level = 0) => {
+        const indent = '  '.repeat(level);
+        let html = `<div class="file-node" style="margin-left: ${level * 20}px;">
+                      <span class="${node.type}-icon">${node.name}</span>
+                    </div>`;
+        
         if (node.type === "folder" && node.children.length) {
-          html += `<ul>${node.children.map(buildList).join('')}</ul>`;
+          for (let child of node.children) {
+            html += buildList(child, level + 1);
+          }
         }
-        html += `</li>`;
         return html;
       };
-      document.getElementById("fileTree").innerHTML = `<ul>${fs.children.map(buildList).join('')}</ul>`;
+      
+      let html = '<div class="file-node"><span class="folder-icon">root</span></div>';
+      for (let child of fs.children) {
+        html += buildList(child, 1);
+      }
+      
+      document.getElementById("fileTree").innerHTML = html;
     }
+
+    function updateFileStats() {
+      const countNodes = (node) => {
+        let folders = node.type === "folder" ? 1 : 0;
+        let files = node.type === "file" ? 1 : 0;
+        
+        for (let child of node.children) {
+          const childCount = countNodes(child);
+          folders += childCount.folders;
+          files += childCount.files;
+        }
+        
+        return { folders, files };
+      };
+      
+      const stats = countNodes(fs);
+      document.getElementById("folderCount").textContent = stats.folders;
+      document.getElementById("fileCount").textContent = stats.files;
+    }
+
+    // Memory Management Functions
+    function allocateMemory() {
+      const pid = document.getElementById("memPid").value.trim();
+      const size = parseInt(document.getElementById("memSize").value);
+      
+      if (!pid || isNaN(size) || size <= 0) {
+        alert("Please enter valid process ID and size");
+        return;
+      }
+      
+      if (allocatedProcesses.has(pid)) {
+        alert("Process already allocated memory");
+        return;
+      }
+      
+      const blocksNeeded = Math.ceil(size / 10);
+      let startBlock = findFreeBlocks(blocksNeeded);
+      
+      if (startBlock === -1) {
+        alert("Not enough contiguous memory available");
+        return;
+      }
+      
+      // Allocate memory
+      for (let i = startBlock; i < startBlock + blocksNeeded; i++) {
+        memoryMap[i] = pid;
+      }
+      
+      allocatedProcesses.set(pid, { startBlock, blocksNeeded, size });
+      document.getElementById("memPid").value = "";
+      document.getElementById("memSize").value = "";
+      
+      updateMemoryVisualization();
+      updateMemoryStats();
+    }
+
+    function deallocateMemory() {
+      const pid = document.getElementById("memPid").value.trim();
+      
+      if (!pid || !allocatedProcesses.has(pid)) {
+        alert("Process not found or not allocated");
+        return;
+      }
+      
+      const allocation = allocatedProcesses.get(pid);
+      for (let i = allocation.startBlock; i < allocation.startBlock + allocation.blocksNeeded; i++) {
+        memoryMap[i] = null;
+      }
+      
+      allocatedProcesses.delete(pid);
+      document.getElementById("memPid").value = "";
+      
+      updateMemoryVisualization();
+      updateMemoryStats();
+    }
+
+    function clearMemory() {
+      memoryMap.fill(null);
+      allocatedProcesses.clear();
+      updateMemoryVisualization();
+      updateMemoryStats();
+    }
+
+    function findFreeBlocks(blocksNeeded) {
+      let consecutiveFree = 0;
+      let startBlock = -1;
+      
+      for (let i = 0; i < memoryMap.length; i++) {
+        if (memoryMap[i] === null) {
+          if (consecutiveFree === 0) startBlock = i;
+          consecutiveFree++;
+          if (consecutiveFree === blocksNeeded) return startBlock;
+        } else {
+          consecutiveFree = 0;
+        }
+      }
+      
+      return -1;
+    }
+
+    function updateMemoryVisualization() {
+      const container = document.getElementById("memoryBlocks");
+      container.innerHTML = "";
+      
+      for (let i = 0; i < memoryMap.length; i++) {
+        const block = document.createElement("div");
+        block.className = "memory-block";
+        
+        if (memoryMap[i] === null) {
+          block.classList.add("memory-free");
+          block.textContent = "Free";
+        } else {
+          block.classList.add("memory-used");
+          block.textContent = memoryMap[i];
+        }
+        
+        container.appendChild(block);
+      }
+    }
+
+    function updateMemoryStats() {
+      const usedBlocks = memoryMap.filter(block => block !== null).length;
+      const freeBlocks = memoryMap.length - usedBlocks;
+      
+      document.getElementById("usedMemory").textContent = usedBlocks * 10;
+      document.getElementById("freeMemory").textContent = freeBlocks * 10;
+      
+      // Calculate fragmentation
+      let fragments = 0;
+      let inFreeRegion = false;
+      
+      for (let i = 0; i < memoryMap.length; i++) {
+        if (memoryMap[i] === null && !inFreeRegion) {
+          fragments++;
+          inFreeRegion = true;
+        } else if (memoryMap[i] !== null) {
+          inFreeRegion = false;
+        }
+      }
+      
+      document.getElementById("fragmentation").textContent = fragments;
+    }
+
+    // Performance Chart
+    let performanceChart;
+
+    function updatePerformanceChart() {
+      const ctx = document.getElementById('performanceChart').getContext('2d');
+      
+      if (performanceChart) {
+        performanceChart.destroy();
+      }
+      
+      const data = {
+        labels: processes.map(p => p.pid),
+        datasets: [{
+          label: 'Burst Time',
+          data: processes.map(p => p.burst),
+          backgroundColor: 'rgba(102, 126, 234, 0.6)',
+          borderColor: 'rgba(102, 126, 234, 1)',
+          borderWidth: 2
+        }, {
+          label: 'Wait Time',
+          data: schedulingResults.map(p => p.waitTime || 0),
+          backgroundColor: 'rgba(255, 107, 107, 0.6)',
+          borderColor: 'rgba(255, 107, 107, 1)',
+          borderWidth: 2
+        }]
+      };
+      
+      performanceChart = new Chart(ctx, {
+        type: 'bar',
+        data: data,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Time Units'
+              }
+            },
+            x: {
+              title: {
+                display: true,
+                text: 'Process ID'
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top'
+            },
+            title: {
+              display: true,
+              text: 'Process Performance Analysis'
+            }
+          }
+        }
+      });
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      renderTree();
+      updateFileStats();
+      updateMemoryVisualization();
+      updateMemoryStats();
+      updatePerformanceChart();
+    });
   </script>
 </body>
 </html>

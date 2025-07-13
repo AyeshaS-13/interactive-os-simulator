@@ -1,1 +1,0 @@
-# interactive-os-simulator
